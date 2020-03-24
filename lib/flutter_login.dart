@@ -7,9 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'src/constants.dart';
 import 'src/providers/login_theme.dart';
 import 'src/widgets/null_widget.dart';
 import 'theme.dart';
+import 'src/size_helpers.dart';
 import 'src/dart_helper.dart';
 import 'src/color_helper.dart';
 import 'src/providers/auth.dart';
@@ -138,7 +140,8 @@ class __HeaderState extends State<_Header> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     const gap = 5.0;
-    final logoHeight = min(widget.height - _titleHeight - gap, kMaxLogoHeight);
+    //final logoHeight = min(widget.height - _titleHeight - gap, kMaxLogoHeight);
+    final logoHeight = widget.height - _titleHeight - gap;
     final displayLogo = widget.logoPath != null && logoHeight >= kMinLogoHeight;
 
     Widget logo = displayLogo
@@ -177,26 +180,30 @@ class __HeaderState extends State<_Header> {
       title = null;
     }
 
-    return SizedBox(
-      height: widget.height,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          if (displayLogo)
+    return SafeArea(
+      child: SizedBox(
+        height: widget.height,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            if (displayLogo)
+              Flexible(
+                child: FadeIn(
+                  controller: widget.logoController,
+                  offset: .25,
+                  fadeDirection: FadeDirection.topToBottom,
+                  child: logo,
+                ),
+              ),
+            SizedBox(height: gap),
             FadeIn(
-              controller: widget.logoController,
-              offset: .25,
+              controller: widget.titleController,
+              offset: .5,
               fadeDirection: FadeDirection.topToBottom,
-              child: logo,
+              child: title,
             ),
-          SizedBox(height: gap),
-          FadeIn(
-            controller: widget.titleController,
-            offset: .5,
-            fadeDirection: FadeDirection.topToBottom,
-            child: title,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -532,7 +539,15 @@ class _FlutterLoginState extends State<FlutterLogin>
     final loginTheme = widget.theme ?? LoginTheme();
     final theme = _mergeTheme(theme: Theme.of(context), loginTheme: loginTheme);
     final deviceSize = MediaQuery.of(context).size;
-    const headerMargin = 15;
+    final orientation = MediaQuery.of(context).orientation;
+    //https://iiro.dev/2018/01/28/implementing-adaptive-master-detail-layouts/
+    // The equivalent of the "smallestWidth" qualifier on Android.
+    var shortestSide = MediaQuery.of(context).size.shortestSide;
+    // Determine if we should use mobile layout or not. The
+    // number 600 here is a common breakpoint for a typical
+    // 7-inch tablet.
+    final bool useMobileLayout = shortestSide < 600;
+    const headerMargin = 20;
     const cardInitialHeight = 300;
     final cardTopPosition = deviceSize.height / 2 - cardInitialHeight / 2;
     final headerHeight = cardTopPosition - headerMargin;
@@ -583,10 +598,12 @@ class _FlutterLoginState extends State<FlutterLogin>
                         onSubmitCompleted: widget.onSubmitAnimationCompleted,
                       ),
                     ),
-                    Positioned(
-                      top: cardTopPosition - headerHeight - headerMargin,
-                      child: _buildHeader(headerHeight, loginTheme),
-                    ),
+                    (orientation == Orientation.portrait || !useMobileLayout)
+                        ? Positioned(
+                            top: cardTopPosition - headerHeight - headerMargin,
+                            child: _buildHeader(headerHeight, loginTheme),
+                          )
+                        : NullWidget()
                   ],
                 ),
               ),

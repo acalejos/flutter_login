@@ -135,7 +135,7 @@ class LoginScreen extends StatelessWidget {
       //   ),
       // ),
       emailValidator: (value) {
-        if (!value.contains('@') || !value.endsWith('.com')) {
+        if (!value.trim().contains('@') || !value.trim().endsWith('.com')) {
           return "Email must contain '@' and end with '.com'";
         }
         return null;
@@ -169,7 +169,7 @@ class LoginScreen extends StatelessWidget {
         return _recoverPassword(name);
         // Show new password dialog
       },
-      showDebugButtons: true,
+      showDebugButtons: false,
     );
   }
 }
